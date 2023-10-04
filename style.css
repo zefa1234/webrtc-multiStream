@@ -1,0 +1,87 @@
+#chat{
+
+    position:absolute;
+    bottom:30%;
+    right:10px
+    
+}
+/* #otherstream{
+
+    position:absolute;
+    top:80px;
+    left:80px;
+    width:600px;
+    height:400px;
+    background-color:#C4C4C4;
+
+} */
+#mystream{
+
+    position:fixed;
+    bottom:10px;
+    left:30px;
+    /* width:600px;
+    height:400px; */
+    background-color:#C4C4C4;
+
+}
+#video{
+
+    /* position:relative;
+    top:50px; */
+    /* left:80px; */
+    width:400px;
+    height:225px;
+    /* background-color:grey; */
+
+}
+#othervideo0{
+
+    /* position:relative;
+    top:50px; */
+    /* left:80px; */
+    width:480px;
+    height:270px;
+    background-color:grey;
+
+}
+#othervideo1{
+
+    /* position:relative;
+    top:50px; */
+    /* left:80px; */
+    width:480px;
+    height:270px;
+    background-color:grey;
+
+}
+#othervideo2{
+
+    /* position:relative;
+    top:50px; */
+    /* left:80px; */
+    width:480px;
+    height:270px;
+    background-color:grey;
+
+}
+#othervideo3{
+
+    /* position:relative;
+    top:50px; */
+    /* left:80px; */
+    width:480px;
+    height:270px;
+    background-color:grey;
+
+}
+/* #my-button{
+
+    position:relative;
+    top:500px;
+    left:80px;
+
+} */
+textarea {
+    resize: none;
+ }

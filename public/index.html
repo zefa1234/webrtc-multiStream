@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- <link rel="stylesheet" type="text/css" href="style.css"> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" ></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>  
+  <style>
+
+    #chat{
+
+    position:absolute;
+    bottom:30%;
+    right:10px
+
+    }
+    /* #otherstream{
+
+    position:absolute;
+    top:80px;
+    left:80px;
+    width:600px;
+    height:400px;
+    background-color:#C4C4C4;
+
+    } */
+    #mystream{
+
+    position:fixed;
+    bottom:10px;
+    left:30px;
+    /* width:600px;
+    height:400px; */
+    background-color:#C4C4C4;
+
+    }
+    #video{
+
+    /* position:relative;
+    top:50px; */
+    /* left:80px; */
+    width:400px;
+    height:225px;
+    /* background-color:grey; */
+
+    }
+    #othervideo0{
+
+    /* position:relative;
+    top:50px; */
+    /* left:80px; */
+    width:480px;
+    height:270px;
+    background-color:grey;
+
+    }
+    #othervideo1{
+
+    /* position:relative;
+    top:50px; */
+    /* left:80px; */
+    width:480px;
+    height:270px;
+    background-color:grey;
+
+    }
+    #othervideo2{
+
+    /* position:relative;
+    top:50px; */
+    /* left:80px; */
+    width:480px;
+    height:270px;
+    background-color:grey;
+
+    }
+    #othervideo3{
+
+    /* position:relative;
+    top:50px; */
+    /* left:80px; */
+    width:480px;
+    height:270px;
+    background-color:grey;
+
+    }
+    /* #my-button{
+
+    position:relative;
+    top:500px;
+    left:80px;
+
+    } */
+    textarea {
+    resize: none;
+    }
+
+  </style>
+  <body >
+    <div id = "otherstream">
+      <video autoplay id="othervideo" style="display:none"></video>
+      <video autoplay id="othervideo0"></video>
+      <video autoplay id="othervideo1" style="display:none"></video>
+      <br>
+      <video autoplay id="othervideo2" style="display:none"></video>
+      <video autoplay id="othervideo3" style="display:none"></video>
+      <input id="reset" type="button" name="reset" value="reset" onclick="startrec()">
+      <!-- <input id="connect" type="button" name="connect" value="bro" onclick="bro()">
+      <input id="com" type="button" name="com" value="com" onclick="com()">
+      <input id="peer" type="button" name="com" value="peer" onclick="peerstate()">
+      <input id="peerrec0" type="button" name="com" value="peerrec0" onclick="peerrec0state()">
+      <input id="peerrec1" type="button" name="com" value="peerrec1" onclick="peerrec1state()">
+      <input id="peerrec2" type="button" name="com" value="peerrec2" onclick="peerrec2state()">
+      <input id="peerrec3" type="button" name="com" value="peerrec3" onclick="peerrec3state()"> -->
+      <br>
+      <span id="numstream"></span>
+    </div>
+    <div id = "mystream">
+      <video autoplay id="video"></video>
+      <br>
+      <span id="username"></span>
+      <br>
+      <input id="my-button" type="button" name="加入視訊" value="join call" onclick="joincall()">
+    </div>
+    <span id="roomstate"></span>
+      <br>
+      <span id="roomnum"></span>
+      <br>
+    
+    <div id = "chat">
+      <textarea name = "text" id="chatcontent" cols="30" rows="20"  disabled  >聊天室~~~</textarea>
+      <br>
+
+      <textarea  id="inputtext" name="輸入" placeholder="訊息..." cols="20" rows="1" style="overflow:hidden" onkeypress="send()"></textarea>
+      <br>
+      <span id="numusers"></span>
+    </div>
+    <script>
+
+      //var socket =  io("ws://localhost:3000",{ transports: ['websocket', 'polling', 'flashsocket'] });
+      var socket =  io.connect();
+      var input = document.getElementById("inputtext");
+      var chatcontent = document.getElementById("chatcontent");
+      var clientname;
+      var streamcount ;
+      var peerinfo;
+      var peer;
+      var peerrec = [4];
+      var peerrec2;
+      var peerrec3;
+      var peerrec4;
+      var conrec = 0
+      var ispeer = false;
+      var ispeerrec = false;
+      var activ = false;
+      var localstream;
+      var roomnum = null;
+      // var instance = axios.create({
+      //       baseURL: 'http://localhost:3000',
+      //       headers: {"Access-Control-Allow-Origin": "*"}
+      //     });
+      const userRequest = axios.create({
+        //baseURL: 'http://localhost:3000'
+        //headers: { 'Content-Type': 'application/json' },
+        //timeout: 20000,
+        //headers: {"Access-Control-Allow-Origin": "http://localhost:5000"}
+        //headers: { 'Content-Type': 'application/json' },
+      })
+
+      window.onload = async function (){
+
+        entername();
+
+      }
+
+      function peerstate(){
+
+        var connectionState = peer.connectionState;
+        if(connectionState == "connected")
+        console.log(connectionState)
+
+      }
+      function peerrec0state(){
+
+        var connectionState = peerrec[0].connectionState;
+        if(connectionState == "connected")
+        console.log(connectionState)
+
+      }
+      function peerrec1state(){
+
+        var connectionState = peerrec[1].connectionState;
+        if(connectionState == "connected")
+        console.log(connectionState)
+
+      }
+      function peerrec2state(){
+
+        var connectionState = peerrec[2].connectionState;
+        if(connectionState == "connected")
+        console.log(connectionState)
+
+      }
+      function peerrec3state(){
+
+        var connectionState = peerrec[3].connectionState;
+        if(connectionState == "connected")
+        console.log(connectionState)
+
+      }
+      
+      
+      function joincall(){
+
+        if(roomnum != null){
+        var passward = prompt("enter passward");
+        if(passward == roomnum){
+
+          if(streamcount<4){
+
+            initpeer();
+
+          }
+          else{
+            alert("the room is full!");
+          }
+          
+        }
+        else{
+          alert("wrong passward!");
+        }
+        //init();
+        }else{
+
+          initpeer();
+
+        }
+        
+
+      }
+
+      function closeing(peer){
+
+              // 1. 移除事件監聽
+        peer.ontrack = null;
+        peer.onicecandidate = null;
+        peer.onnegotiationneeded = null;
+
+        // 2. 停止所有在connection中的多媒體信息
+        peer.getSenders().forEach((sender) => {
+          peer.removeTrack(sender);
+        });
+
+        // 4. cleanup： 關閉RTCPeerConnection連線並釋放記憶體
+        peer.close();
+        peer = null;
+
+      }
+
+      function startrec(){
+
+        if(ispeerrec == true){
+
+          document.getElementById("othervideo0").style.display = "false";
+          document.getElementById("othervideo1").style.display = "false";
+          document.getElementById("othervideo2").style.display = "false";
+          document.getElementById("othervideo3").style.display = "false";
+
+        }
+
+        conrec = 0
+        socket.emit('restream')
+        rec(conrec)
+
+      }
+
+      async function rec(num) {
+
+        document.getElementById("reset").disabled = true;
+
+        
+        if(ispeerrec == false){
+
+          ispeerrec = true;
+
+        }
+        console.log("**********"+streamcount);
+        // for(var i = 0;i<streamcount;i++){
+
+          
+        //   peerrec[i] = createPeer(false,i);
+        //   peerrec[i].addTransceiver("video", { direction: "recvonly" })
+
+        // }
+        // peerrec2 = createPeer(false,i);
+        // peerrec2.addTransceiver("video", { direction: "recvonly" })
+
+
+        let configuration = {
+                    iceServers: [
+                        {
+                            "urls": ["stun:stun.l.google.com:19302", 
+                            "stun:stun1.l.google.com:19302", 
+                            "stun:stun2.l.google.com:19302"]
+                        }
+                    ]
+                }
+
+                peerrec[num] = new RTCPeerConnection(configuration)
+                peerrec[num].addTransceiver("video", { direction: "recvonly" })
+
+                peerrec[num].onaddstream = (e) => {
+                    document.getElementById("othervideo"+num.toString())
+                    .srcObject = e.stream
+
+                }
+                document.getElementById("othervideo"+num.toString()).style.display = "block";
+
+                socket.emit('settype',"com");
+
+                // var candnum = [];
+                
+                // peerrec[num].onicecandidate = function(event) {
+                //   if (event.candidate) {
+                //     candnum.push(e.candidate);
+                //     // Send the candidate to the remote peer
+                //   }
+                // }
+                // socket.emit('candidatenum',candnum.length);
+                // console.log("candnum " + candnum.length)
+                // peerrec[num].onicecandidate = ((e) => {
+                //     if (e.candidate == null){
+                      
+                //       return
+                //     }
+                    
+                //     socket.emit('candidatenum',e.candidate);
+                // })
+                peerrec[num].onicecandidate = ((e) => {
+                    if (e.candidate == null){
+                      
+                      return
+                    }
+                    
+                    socket.emit('storecandidate',e.candidate);
+                })
+                
+
+                createAndSendOffer2(num)
+                socket.emit('isok');
+      
+      }
+
+
+      async function initpeer() {
+
+        document.getElementById("reset").disabled = true;
+
+          if(ispeer == true){
+
+          //closeing(peer);
+
+          }
+          if(ispeer == false){
+
+          ispeer = true;
+
+          }
+          // const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          // document.getElementById("video").srcObject = stream;
+          // peer = createPeer(true,4);
+          // //stream.getTracks().forEach(track => peer.addTrack(track, stream)); //原本
+          // //////////
+          // // peer.addStream(stream)
+          // stream.getTracks().forEach(track => peer.addTrack(track, stream));
+            
+          //////////////
+                  navigator.mediaDevices.getUserMedia({
+                // video: {
+                //     frameRate: 24,
+                //     width: {
+                //         min: 480, ideal: 720, max: 1280
+                //     },
+                //     aspectRatio: 1.33333
+                // },
+                // audio: false
+                video: true
+            }).then( (stream) => {
+                localStream = stream
+                document.getElementById("video").srcObject = localStream
+
+                let configuration = {
+                    iceServers: [
+                        {
+                            "urls": ["stun:stun.l.google.com:19302", 
+                            "stun:stun1.l.google.com:19302", 
+                            "stun:stun2.l.google.com:19302"]
+                        }
+                    ]
+                }
+                
+
+                peer = new RTCPeerConnection(configuration)
+                peer.addStream(localStream)
+
+                socket.emit('settype',"broad");
+
+                // var candnum = [];
+                
+                // peer.onicecandidate = function(event) {
+                //   if (event.candidate) {
+                //     candnum.push(e.candidate);
+                //     // Send the candidate to the remote peer
+                //   }
+                // }
+                // socket.emit('candidatenum',candnum.length);
+                // console.log("candnum " + candnum.length)
+                // peer.onicecandidate = ((e) => {
+                //     if (e.candidate == null){
+                      
+                //       return
+                //     }
+                    
+                //     socket.emit('candidatenum',e.candidate);
+                // })
+                peer.onicecandidate = ((e) => {
+                    if (e.candidate == null){
+                      
+                      return
+                    }
+                    
+                    socket.emit('storecandidate',e.candidate);
+                })
+                
+
+                createAndSendOffer()
+                socket.emit('isok');
+
+                //socket.emit('startconnect',"broad");
+
+            }, (error) => {
+                console.log(error)
+            });
+
+          
+      }
+
+function bro(){
+
+  socket.emit('startbro',true);
+
+}
+function com(){
+
+socket.emit('startcom',false);
+
+}
+
+async function createAndSendOffer() {
+    const offer = await peer.createOffer();
+    await peer.setLocalDescription(offer)
+    socket.emit('storeoffer',peer.localDescription);
+
+}
+async function createAndSendOffer2(num) {
+    const offer = await peerrec[num].createOffer();
+    await peerrec[num].setLocalDescription(offer)
+    socket.emit('storeoffer',peerrec[num].localDescription);
+}
+
+
+
+      function entername(){
+
+        clientname=prompt("input your name");
+
+        while(clientname==null){
+
+          alert("please enter your name!");
+          clientname=prompt("input your name");
+
+        }
+
+        document.getElementById("username").textContent = "Your name: "+ clientname;
+        socket.emit('userlog',clientname);///應改為用戶ID 有時間再改
+
+
+      }
+      
+      function send(){
+
+        
+        var lKeyCode = (navigator.appname=="Netscape")?event.which:event.keyCode;
+        
+        if(input.value == "\r" || input.value == "\r\n" || input.value == "\n"){
+
+          input.value = "";
+
+        }
+        if ( lKeyCode == 13 && input.value !== ""){
+          
+          console.log(input.value.length);
+          socket.emit('sendtext', input.value.replace(/(\r\n|\n|\r)/gm,""));
+          input.value = null;
+          
+        }
+        
+      }
+
+
+      socket.on('succeedlog',function(text){
+
+        console.log("log in success");
+        let configuration = {
+                    iceServers: [
+                        {
+                            "urls": ["stun:stun.l.google.com:19302", 
+                            "stun:stun1.l.google.com:19302", 
+                            "stun:stun2.l.google.com:19302"]
+                        }
+                    ]
+                }
+
+        peerinfo = new RTCPeerConnection(configuration)
+        peerinfo.addTransceiver("video", { direction: "recvonly" })
+
+        peerinfo.onaddstream = (e) => {
+            document.getElementById("othervideo")
+            .srcObject = e.stream
+        }
+        peerinfo.onicecandidate = ((e) => {
+            if (e.candidate == null){
+              
+              return
+            }
+            console.log("counting candidatenum " + e.candidate)
+            socket.emit('candidatenum',e.candidate);
+        })
+        const offer =  peerinfo.createOffer();
+        peerinfo.setLocalDescription(offer)
+        
+        if(streamcount > 0){
+
+          //startrec();
+
+        }
+
+      })
+      socket.on('restream',function(text){
+
+        console.log("restream")
+        startrec();
+
+      })
+      socket.on('conrec',function(text){
+
+        console.log(text)
+        rec(text);
+
+      })
+      socket.on('chat',function(text){
+
+        //alert(text);
+        chatcontent.append('\n'+text);
+        chatcontent.scrollTop = chatcontent.scrollHeight 
+
+
+      })
+      socket.on('streamcount',function(text){
+
+      streamcount = text;
+      document.getElementById("numstream").textContent = streamcount;
+
+      
+
+
+      })
+      socket.on('numusers',function(text){
+
+      document.getElementById("numusers").textContent = text;
+
+      if(text == 1){
+
+        var passward = prompt("you are the host now! you can set the room number!");
+
+        if(passward != null){
+
+          document.getElementById("roomnum").textContent = "The room number is " + passward + " . Only you can see it ! ";
+
+        }
+        
+        socket.emit('setroom',passward);
+
+      }
+
+
+      })
+      socket.on('setroomnum',function(text){
+
+        roomnum = text;
+        if(text == null){
+
+          document.getElementById("roomstate").textContent = "The room is available for everyone now!";
+          //document.getElementById("roomnum").textContent = "";
+
+        }
+        else{
+
+          document.getElementById("roomstate").textContent = "The room is locked by the host now!";
+
+        }
+
+      })
+      socket.on('candidate1',function(text){
+
+        peer.addIceCandidate(text)
+
+      })
+      socket.on('answer1',function(text){
+
+        const desc = new RTCSessionDescription(text);
+        peer.setRemoteDescription(desc).catch(e => console.log(e));
+        socket.emit('newstream');
+        document.getElementById("reset").disabled = false;
+
+
+      })
+      socket.on('candidate2',function(text){
+
+        console.log('candidate2')
+        peerrec[0].addIceCandidate(text)
+
+
+      })
+      socket.on('answer2',function(text){
+
+        const desc = new RTCSessionDescription(text);
+        peerrec[0].setRemoteDescription(desc).catch(e => console.log(e));
+        conrec++;
+        document.getElementById("reset").disabled = false;
+
+      })
+      socket.on('candidate3',function(text){
+        console.log('candidate3')
+      peerrec[1].addIceCandidate(text)
+
+
+      })
+      socket.on('answer3',function(text){
+
+      const desc = new RTCSessionDescription(text);
+      peerrec[1].setRemoteDescription(desc).catch(e => console.log(e));
+      conrec++;
+      document.getElementById("reset").disabled = false;
+
+      })
+      socket.on('candidate4',function(text){
+        console.log('candidate4')
+      peerrec[2].addIceCandidate(text)
+
+
+      })
+      socket.on('answer4',function(text){
+
+      const desc = new RTCSessionDescription(text);
+      peerrec[2].setRemoteDescription(desc).catch(e => console.log(e));
+      conrec++;
+      document.getElementById("reset").disabled = false;
+
+      })
+      socket.on('candidate5',function(text){
+        console.log('candidate5')
+      peerrec[3].addIceCandidate(text)
+
+
+      })
+      socket.on('answer5',function(text){
+
+      const desc = new RTCSessionDescription(text);
+      peerrec[3].setRemoteDescription(desc).catch(e => console.log(e));
+      conrec++;
+      document.getElementById("reset").disabled = false;
+
+      })
+      socket.on('isok',function(text){
+
+        if(text == false){
+
+          setTimeout(function(){
+            socket.emit('isok');//do what you need here
+          }, 2000);
+          
+
+        }
+
+      })
+      
+      socket.on('sucessbro',function(text){
+
+        socket.emit('startbro',true);
+
+      })
+      socket.on('sucesscom',function(text){
+
+        socket.emit('startcom',conrec);
+
+      })
+      
+
+    </script>
+  </body>
+
+</html>
